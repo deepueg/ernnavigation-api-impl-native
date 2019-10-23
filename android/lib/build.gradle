@@ -28,7 +28,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testImplementation 'junit:junit:4.12'
-    api ('com.walmartlabs.ern:local-container:1.0.0') {changing=true}
+    api ('com.walmartlabs.ern:local-container:100.0.0') {changing=true}
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
 }

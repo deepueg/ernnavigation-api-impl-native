@@ -82,48 +82,70 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
         //PlaceHolder
     }
 
+    /**
+     * Returns a ReactRootView of the passed MiniApp component (component name provided inside arguments under #KEY_MINI_APP_COMPONENT_NAME)
+     * <p> Or
+     * Returns a View hierarchy if a valid {@link DataProvider#fragmentLayoutId()} layout xml resource is passed.
+     * Pass a valid {@link DataProvider#reactViewContainerId()} for the MiniApp component(provided inside arguments under #KEY_MINI_APP_COMPONENT_NAME) to be inflated properly inside the view hierarchy.
+     *
+     * @param inflater           The LayoutInflater object that can be used to inflate
+     *                           any views in the fragment,
+     * @param container          If non-null, this is the parent view that the fragment's
+     *                           UI should be attached to.  The fragment should not add the view itself,
+     *                           but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     *                           from a previous saved state as given here.
+     * @return View
+     * <p>
+     * Throws {@link IllegalStateException} when either a MiniApp component name is not passed as KEY_MINI_APP_COMPONENT_NAME in arguments or a valid lauout xml is not provided via {@link DataProvider#fragmentLayoutId()}
+     */
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (mFragment.getArguments() == null) {
-            throw new IllegalStateException("Looks like the the fragment arguments are not set. \"miniAppComponentName\" is a required property with a string value");
+        if (mFragment.getArguments() != null) {
+            miniAppComponentName = mFragment.getArguments().getString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME);
         }
 
-        miniAppComponentName = mFragment.getArguments().getString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME);
-        if (TextUtils.isEmpty(miniAppComponentName)) {
-            throw new IllegalStateException("Missing key \"miniAppComponentName\" in args");
-        }
-
-        Logger.d(TAG, "delegate.onCreateView() called. Component name: " + miniAppComponentName);
-        assert miniAppComponentName != null;
-
+        Logger.d(TAG, "delegate.onCreateView() called. MiniApp component name: " + miniAppComponentName);
 
         if (mMiniAppView == null) {
-            mMiniAppView = (ReactRootView) mMiniAppRequestListener.createReactNativeView(miniAppComponentName, initialProps(savedInstanceState != null));
+            if (!TextUtils.isEmpty(miniAppComponentName)) {
+                mMiniAppView = (ReactRootView) mMiniAppRequestListener.createReactNativeView(miniAppComponentName, initialProps(savedInstanceState != null));
+            } else {
+                Logger.d(TAG, "MiniApp view not created");
+            }
         }
 
-        boolean showHomeAsUpEnabled = mFragment.getArguments().getBoolean(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_SHOW_UP_ENABLED, false);
+        View rootView;
         if (mDataProvider.fragmentLayoutId() != DataProvider.NONE) {
             if (mRootView == null) {
                 mRootView = inflater.inflate(mDataProvider.fragmentLayoutId(), container, false);
 
                 setUpToolBarIfPresent();
 
-                if (mDataProvider.reactViewContainerId() == DataProvider.NONE) {
-                    throw new IllegalStateException("Missing a ViewGroup resource id to mount the ReactNative view. Did you forget to override reactViewContainerId() inside the ElectrodeReactFragmentDelegate.DataProvider implementation.");
-                }
-
-                View view = mRootView.findViewById(mDataProvider.reactViewContainerId());
-                if (view instanceof ViewGroup) {
-                    ((ViewGroup) view).addView(mMiniAppView);
+                if (mDataProvider.reactViewContainerId() != DataProvider.NONE && mMiniAppView != null) {
+                    View view = mRootView.findViewById(mDataProvider.reactViewContainerId());
+                    if (view instanceof ViewGroup) {
+                        ((ViewGroup) view).addView(mMiniAppView);
+                    } else {
+                        throw new IllegalStateException("reactViewContainerId() should represent a ViewGroup to be able to add a react root view inside it.");
+                    }
                 } else {
-                    throw new IllegalStateException("reactViewContainerId() should represent a ViewGroup to be able to add a react root view inside it.");
+                    Logger.i(TAG, "Missing reactViewContainerId() or mMiniAppView is null. Will not add MiniApp view explicitly. Do you have a MiniAppView component defined in your layout xml resource file?.");
                 }
             }
-            handleUpNavigation(showHomeAsUpEnabled);
-            return mRootView;
+            Logger.d(TAG, "Returning view inflated using a custom layout.");
+            rootView = mRootView;
         } else {
-            handleUpNavigation(showHomeAsUpEnabled);
-            return mMiniAppView;
+            if (mMiniAppView == null) {
+                throw new IllegalStateException("MiniAppView is null. Should never reach here. onCreateView() should return a non-null view.");
+            }
+            Logger.d(TAG, "Returning a react root view.");
+            rootView = mMiniAppView;
         }
+
+        boolean showHomeAsUpEnabled = mFragment.getArguments().getBoolean(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_SHOW_UP_ENABLED, false);
+        handleUpNavigation(showHomeAsUpEnabled);
+
+        return rootView;
     }
 
     private void setUpToolBarIfPresent() {
@@ -263,7 +285,7 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
 
         /***
          * Return the layout xml that will be used by the fragment to create the view.
-         * This is the layout where you can place your toolbar(optional) and an empty view group to inflate the react native view.
+         * This is the layout where you can place your toolbar(optional) and an empty view group({@link #reactViewContainerId()}) to inflate the react native view a.k.a MiniApp View Component.
          * @return int, a valid @{@link LayoutRes } or {@link #NONE}
          */
         @LayoutRes
@@ -350,5 +372,12 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
          * @return true if the menu was shown false otherwise
          */
         boolean showDevMenuIfDebug(KeyEvent event);
+    }
+
+
+    /**
+     * This class is used as an indicator by the {@link com.ern.api.impl.core.ElectrodeReactFragmentActivityDelegate} to fall back to the DefaultFragment provided by the hosting activity's {@link com.ern.api.impl.core.ElectrodeReactFragmentActivityDelegate.DataProvider}
+     */
+    public static final class DefaultFragmentIndicator extends Fragment {
     }
 }

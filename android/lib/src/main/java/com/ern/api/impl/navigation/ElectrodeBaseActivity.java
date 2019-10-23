@@ -66,10 +66,10 @@ public abstract class ElectrodeBaseActivity extends AppCompatActivity implements
     @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(mainLayout());
 
         mElectrodeReactNavDelegate = createElectrodeDelegate();
         getLifecycle().addObserver(mElectrodeReactNavDelegate);
+        setContentView(mainLayout());
         mElectrodeReactNavDelegate.onCreate(savedInstanceState);
 
         setupNavBar();
@@ -162,17 +162,19 @@ public abstract class ElectrodeBaseActivity extends AppCompatActivity implements
 
     @Override
     public void startMiniAppFragment(@NonNull String componentName, @Nullable Bundle props) {
-        mElectrodeReactNavDelegate.startMiniAppFragment(componentName, props);
+        ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig config = new ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig.Builder(miniAppFragmentClass()).props(props).build();
+        mElectrodeReactNavDelegate.startMiniAppFragment(componentName, config);
     }
 
     @Override
     public void startMiniAppFragment(@NonNull Class<? extends Fragment> fragmentClass, @NonNull String componentName, @Nullable Bundle props) {
-        mElectrodeReactNavDelegate.startMiniAppFragment(fragmentClass, componentName, props);
+        ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig config = new ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig.Builder(fragmentClass).props(props).build();
+        mElectrodeReactNavDelegate.startMiniAppFragment(componentName, config);
     }
 
     @Override
-    public void startMiniAppFragment(@NonNull String componentName, @Nullable Bundle props, @NonNull ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig startMiniAppConfig) {
-        mElectrodeReactNavDelegate.startMiniAppFragment(componentName, props, startMiniAppConfig);
+    public void startMiniAppFragment(@NonNull String componentName, @NonNull ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig startMiniAppConfig) {
+        mElectrodeReactNavDelegate.startMiniAppFragment(componentName, startMiniAppConfig);
     }
 
     @Nullable

@@ -195,13 +195,13 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
         if (!TextUtils.isEmpty(path)) {
             //If the hosting activity or fragment has not handled the navigation fall back to the default.
             if (!mMiniAppRequestListener.navigate(route) && !mFragmentNavigator.navigate(route)) {
-                Bundle arguments = route.getArguments();
-                assert path != null;
-                if (shouldUseChildFragmentManager()) {
-                    StartMiniAppConfig config = new StartMiniAppConfig.Builder().fragmentManager(mFragment.getChildFragmentManager()).build();
-                    ((MiniAppNavConfigRequestListener) mMiniAppRequestListener).startMiniAppFragment(path, arguments, config);
+                if (isMiniAppConfigSupported()) {
+                    StartMiniAppConfig config = miniAppConfigForRoute(route);
+                    //noinspection ConstantConditions
+                    ((MiniAppNavConfigRequestListener) mMiniAppRequestListener).startMiniAppFragment(path, config);
                 } else {
-                    mMiniAppRequestListener.startMiniAppFragment(path, arguments);
+                    //noinspection ConstantConditions
+                    mMiniAppRequestListener.startMiniAppFragment(path, route.getArguments());
                 }
             }
             route.setResult(true, "Navigation completed.");
@@ -210,13 +210,55 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
         }
     }
 
+    /**
+     * Checks to see if the hosting activity supports passing a {@link com.walmartlabs.ern.container.miniapps.MiniAppsConfig} while starting a new fragment when a new navigate request is received.
+     *
+     * @return true | false
+     */
+    private boolean isMiniAppConfigSupported() {
+        return (mFragment.getActivity() instanceof MiniAppNavConfigRequestListener);
+    }
+
+    @Nullable
+    private StartMiniAppConfig miniAppConfigForRoute(@NonNull Route route) {
+        Bundle props = route.getArguments();
+        if (propsForRoute(route) != null) {
+            props.putAll(propsForRoute(route));
+        }
+
+        Class<? extends Fragment> fragmentClass = fragmentClassForRoute(route);
+        StartMiniAppConfig.Builder builder = new StartMiniAppConfig.Builder(fragmentClass != null ? fragmentClass : DefaultFragmentIndicator.class)
+                .props(props)
+                .fragmentManager(shouldUseChildFragmentManager() ? mFragment.getChildFragmentManager() : null);
+        return builder.build();
+    }
+
+    /**
+     * This will only be used if {@link #isMiniAppConfigSupported()} returns true.
+     *
+     * @param route : {@link Route}
+     * @return Class
+     */
+    @Nullable
+    protected Class<? extends Fragment> fragmentClassForRoute(@NonNull Route route) {
+        return null;
+    }
+
+    /**
+     * This will only be used if {@link #isMiniAppConfigSupported()} returns true.
+     *
+     * @param route : {@link Route}
+     * @return Bundle Optional props for a specific route.
+     */
+    @Nullable
+    protected Bundle propsForRoute(@NonNull Route route) {
+        return null;
+    }
+
+
     private boolean shouldUseChildFragmentManager() {
         if (mFragment instanceof UseChildFragmentManagerIndicator) {
-            if (mFragment.getActivity() instanceof MiniAppNavConfigRequestListener) {
-                return true;
-            } else {
-                Logger.w(TAG, "Will not use fragment's child fragment manager.\nTo use this, please make sure the parent activity implements MiniAppNavConfigRequestListener");
-            }
+            return true;
         }
         return false;
     }

@@ -1,20 +1,6 @@
-/*
- * Copyright 2019 Walmart Labs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.ern.api.impl.core;
+
+import androidx.lifecycle.LifecycleObserver;
 
 import android.os.Bundle;
 import android.view.Menu;
@@ -38,14 +24,13 @@ import com.walmartlabs.ern.container.ElectrodeReactActivityDelegate;
 
 import static com.ern.api.impl.core.ElectrodeReactFragmentDelegate.MiniAppRequestListener.ADD_TO_BACKSTACK;
 
+public class ErnActivityDelegate extends ElectrodeReactActivityDelegate implements LifecycleObserver {
 
-public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivityDelegate implements LifecycleObserver {
-
-    private static final String TAG = ElectrodeReactFragmentActivityDelegate.class.getSimpleName();
+    private static final String TAG = ErnActivityDelegate.class.getSimpleName();
 
     protected FragmentActivity mFragmentActivity;
 
-    private StartMiniAppConfig mDefaultMiniAppConfig;
+    private ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig mDefaultMiniAppConfig;
     private String mRootComponentName;
 
     private boolean mUpEnabledForRoot;
@@ -60,23 +45,23 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
     }
 
     /**
-     * @deprecated call {@link #ElectrodeReactFragmentActivityDelegate(FragmentActivity, String, StartMiniAppConfig)} instead.
-     * This has been deprecated as part of removing {@link DataProvider} interface and replacing it with {@link StartMiniAppConfig} as a constructor param.
-     * Once updated to use the new Constructor, it's no longer required to implement {@link DataProvider} by the hosting activity.
+     * @deprecated call {@link #ErnActivityDelegate(FragmentActivity, String, ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig)} instead.
+     * This has been deprecated as part of removing {@link ElectrodeReactFragmentActivityDelegate.DataProvider} interface and replacing it with {@link ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig} as a constructor param.
+     * Once updated to use the new Constructor, it's no longer required to implement {@link ElectrodeReactFragmentActivityDelegate.DataProvider} by the hosting activity.
      */
     @Deprecated
-    public ElectrodeReactFragmentActivityDelegate(@NonNull FragmentActivity activity) {
+    public ErnActivityDelegate(@NonNull FragmentActivity activity) {
         this(activity, null, null);
     }
 
-    public ElectrodeReactFragmentActivityDelegate(@NonNull final FragmentActivity activity, @Nullable final String rootComponentName, @NonNull final StartMiniAppConfig defaultStartMiniAppConfig) {
+    public ErnActivityDelegate(@NonNull final FragmentActivity activity, @Nullable final String rootComponentName, @NonNull final ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig defaultStartMiniAppConfig) {
         super(activity, null);
         mFragmentActivity = activity;
         //noinspection ConstantConditions
-        if (activity instanceof DataProvider && defaultStartMiniAppConfig == null/*Keeping this for backward compatibility*/) {
-            DataProvider dataProvider = (DataProvider) activity;
+        if (activity instanceof ElectrodeReactFragmentActivityDelegate.DataProvider && defaultStartMiniAppConfig == null/*Keeping this for backward compatibility*/) {
+            ElectrodeReactFragmentActivityDelegate.DataProvider dataProvider = (ElectrodeReactFragmentActivityDelegate.DataProvider) activity;
             mRootComponentName = dataProvider.getRootComponentName();
-            mDefaultMiniAppConfig = new StartMiniAppConfig.Builder(dataProvider.miniAppFragmentClass())
+            mDefaultMiniAppConfig = new ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig.Builder(dataProvider.miniAppFragmentClass())
                     .props(dataProvider.getProps())
                     .fragmentContainerId(dataProvider.getFragmentContainerId())
                     .build();
@@ -172,28 +157,28 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
     }
 
     /**
-     * @deprecated use {@link #startMiniAppFragment(String, StartMiniAppConfig)} instead
+     * @deprecated use {@link #startMiniAppFragment(String, ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig)} instead
      */
     @Deprecated
     public void startMiniAppFragment(@NonNull String componentName, @Nullable Bundle props) {
-        StartMiniAppConfig config = new StartMiniAppConfig.Builder(mDefaultMiniAppConfig.fragmentClass).props(props).build();
+        ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig config = new ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig.Builder(mDefaultMiniAppConfig.fragmentClass).props(props).build();
         startMiniAppFragment(componentName, config);
     }
 
     /**
-     * @deprecated Start using {@link #startMiniAppFragment(String, StartMiniAppConfig)}
+     * @deprecated Start using {@link #startMiniAppFragment(String, ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig)}
      */
     @Deprecated
     public void startMiniAppFragment(@NonNull Class<? extends Fragment> fragmentClass, @NonNull String componentName, @Nullable Bundle props) {
-        StartMiniAppConfig config = new StartMiniAppConfig.Builder(fragmentClass).props(props).build();
+        ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig config = new ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig.Builder(fragmentClass).props(props).build();
         startMiniAppFragment(componentName, config);
     }
 
     /**
-     * @deprecated Start using {@link #startMiniAppFragment(String, StartMiniAppConfig)} instead by passing the props inside the {@link StartMiniAppConfig} param
+     * @deprecated Start using {@link #startMiniAppFragment(String, ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig)} instead by passing the props inside the {@link ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig} param
      */
     @Deprecated
-    public void startMiniAppFragment(@NonNull String componentName, @Nullable Bundle props, @NonNull StartMiniAppConfig startMiniAppConfig) {
+    public void startMiniAppFragment(@NonNull String componentName, @Nullable Bundle props, @NonNull ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig startMiniAppConfig) {
         if (props == null) {
             props = new Bundle();
         }
@@ -204,7 +189,7 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
         switchToFragment(props, ADD_TO_BACKSTACK, startMiniAppConfig);
     }
 
-    public void startMiniAppFragment(@NonNull String componentName, @NonNull StartMiniAppConfig startMiniAppConfig) {
+    public void startMiniAppFragment(@NonNull String componentName, @NonNull ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig startMiniAppConfig) {
         Bundle props = startMiniAppConfig.props != null ? startMiniAppConfig.props : new Bundle();
         props.putString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME, componentName);
 
@@ -214,10 +199,10 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
     }
 
     private void switchToFragment(@NonNull Bundle bundle,
-                                  @AddToBackStackState int addToBackStackState, @NonNull StartMiniAppConfig startMiniAppConfig) {
+                                  @AddToBackStackState int addToBackStackState, @NonNull ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig startMiniAppConfig) {
         try {
 
-            Class<? extends Fragment> fragmentClass = startMiniAppConfig.fragmentClass.equals(ElectrodeReactFragmentDelegate.DefaultFragmentIndicator.class) ? mDefaultMiniAppConfig.fragmentClass : startMiniAppConfig.fragmentClass;
+            Class<? extends Fragment> fragmentClass = startMiniAppConfig.fragmentClass.equals(ElectrodeReactFragmentDelegate.DefaultFragmentIndicator.class) ? startMiniAppConfig.fragmentClass : mDefaultMiniAppConfig.fragmentClass;
             Fragment fragment = fragmentClass.newInstance();
 
             String tag = (bundle.containsKey(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_TAG)) ? bundle.getString(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_TAG) : bundle.getString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME);
@@ -261,7 +246,7 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
     }
 
     /**
-     * Use the new {@link ElectrodeReactFragmentActivityDelegate} constructor and pass the {@link StartMiniAppConfig} as the default config.
+     * Use the new {@link ElectrodeReactFragmentActivityDelegate} constructor and pass the {@link ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig} as the default config.
      */
     @Deprecated
     public interface DataProvider {
@@ -294,7 +279,7 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
 
         /***
          * Return the default fragment class that needs to be instantiated to render react native component.
-         * The returned fragment class will serve as the DefaultFragment if a FragmentClass is not passed inside {@link StartMiniAppConfig}
+         * The returned fragment class will serve as the DefaultFragment if a FragmentClass is not passed inside {@link ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig}
          *
          * Reference: {@link DefaultMiniAppFragment} {@link com.ern.api.impl.navigation.MiniAppNavFragment}
          * @return Class
@@ -324,7 +309,7 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
 
         final String fragmentTag;
 
-        private StartMiniAppConfig(Builder builder) {
+        private StartMiniAppConfig(ErnActivityDelegate.StartMiniAppConfig.Builder builder) {
             fragmentManager = builder.fragmentManager;
             fragmentClass = builder.fragmentClass;
             fragmentContainerId = builder.fragmentContainerId;
@@ -357,7 +342,7 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
              * @param fragmentManager {@link FragmentManager}
              * @return Builder
              */
-            public Builder fragmentManager(@Nullable FragmentManager fragmentManager) {
+            public ErnActivityDelegate.StartMiniAppConfig.Builder fragmentManager(@Nullable FragmentManager fragmentManager) {
                 this.fragmentManager = fragmentManager;
                 return this;
             }
@@ -368,7 +353,7 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
              * @param fragmentContainerId {@link IdRes}
              * @return Builder
              */
-            public Builder fragmentContainerId(@IdRes int fragmentContainerId) {
+            public ErnActivityDelegate.StartMiniAppConfig.Builder fragmentContainerId(@IdRes int fragmentContainerId) {
                 this.fragmentContainerId = fragmentContainerId;
                 return this;
             }
@@ -379,13 +364,13 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
              * @param props {@link Bundle}
              * @return Builder
              */
-            public Builder props(@Nullable Bundle props) {
+            public ErnActivityDelegate.StartMiniAppConfig.Builder props(@Nullable Bundle props) {
                 this.props = props;
                 return this;
             }
 
-            public StartMiniAppConfig build() {
-                return new StartMiniAppConfig(this);
+            public ErnActivityDelegate.StartMiniAppConfig build() {
+                return new ErnActivityDelegate.StartMiniAppConfig(this);
             }
         }
     }

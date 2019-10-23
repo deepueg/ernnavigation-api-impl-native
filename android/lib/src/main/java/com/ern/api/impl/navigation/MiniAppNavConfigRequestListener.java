@@ -1,9 +1,6 @@
 package com.ern.api.impl.navigation;
 
-import android.os.Bundle;
-
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.ern.api.impl.core.ElectrodeReactFragmentActivityDelegate;
 
@@ -16,7 +13,6 @@ public interface MiniAppNavConfigRequestListener extends MiniAppNavRequestListen
      * starts a new fragment and inflate it with the given react component.
      *
      * @param componentName react view component name.
-     * @param props         optional properties for the component rendering.
      */
-    void startMiniAppFragment(@NonNull String componentName, @Nullable Bundle props, @NonNull ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig startMiniAppConfig);
+    void startMiniAppFragment(@NonNull String componentName, @NonNull ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig startMiniAppConfig);
 }

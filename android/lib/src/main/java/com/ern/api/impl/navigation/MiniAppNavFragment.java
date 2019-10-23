@@ -26,6 +26,10 @@ import androidx.annotation.Nullable;
 
 import com.ern.api.impl.core.ElectrodeReactCoreFragment;
 
+/**
+ * Fragment that is responsible for loading a react native component.
+ */
+
 public class MiniAppNavFragment extends ElectrodeReactCoreFragment<ElectrodeReactFragmentNavDelegate> implements ElectrodeReactFragmentNavDelegate.FragmentNavigator {
 
 
