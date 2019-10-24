@@ -33,6 +33,7 @@ import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.OnLifecycleEvent;
 
 import com.ern.api.impl.core.ElectrodeReactFragmentDelegate.MiniAppRequestListener.AddToBackStackState;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.walmartlabs.electrode.reactnative.bridge.helpers.Logger;
 import com.walmartlabs.ern.container.ElectrodeReactActivityDelegate;
 
@@ -231,9 +232,13 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
             }
             bundle.putBoolean(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_SHOW_UP_ENABLED, shouldShowUpEnabled());
             fragment.setArguments(bundle);
-            int fragmentContainerId = (startMiniAppConfig.fragmentContainerId != 0) ? startMiniAppConfig.fragmentContainerId : mDefaultMiniAppConfig.fragmentContainerId;
-            transaction.replace(fragmentContainerId, fragment, tag);
-            transaction.commit();
+            if (fragment instanceof BottomSheetDialogFragment) {
+                ((BottomSheetDialogFragment) fragment).show(fragmentManager, tag);
+            } else {
+                int fragmentContainerId = (startMiniAppConfig.fragmentContainerId != 0) ? startMiniAppConfig.fragmentContainerId : mDefaultMiniAppConfig.fragmentContainerId;
+                transaction.replace(fragmentContainerId, fragment, tag);
+                transaction.commit();
+            }
         } catch (Exception e) {
             Logger.e(TAG, "Failed to create " + startMiniAppConfig.fragmentClass.getName() + " fragment", e);
         }
@@ -324,12 +329,15 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
 
         final String fragmentTag;
 
+        boolean showAsBottomSheet;
+
         private StartMiniAppConfig(Builder builder) {
             fragmentManager = builder.fragmentManager;
             fragmentClass = builder.fragmentClass;
             fragmentContainerId = builder.fragmentContainerId;
             props = builder.props;
             fragmentTag = builder.fragmentTag;
+            showAsBottomSheet = builder.showAsBottomSheet;
         }
 
         public static class Builder {
@@ -339,6 +347,7 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
             int fragmentContainerId = 0;
             Bundle props;
             String fragmentTag;
+            boolean showAsBottomSheet;
 
 
             /**
@@ -381,6 +390,11 @@ public class ElectrodeReactFragmentActivityDelegate extends ElectrodeReactActivi
              */
             public Builder props(@Nullable Bundle props) {
                 this.props = props;
+                return this;
+            }
+
+            public Builder showAsBottomSheet(boolean value) {
+                this.showAsBottomSheet = value;
                 return this;
             }
 

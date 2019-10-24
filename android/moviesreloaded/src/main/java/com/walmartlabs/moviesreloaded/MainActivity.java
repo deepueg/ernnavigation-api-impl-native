@@ -11,13 +11,13 @@ import com.ern.api.impl.navigation.Route;
  * Demonstrates how a miniapp can be be launched using native android.
  */
 
-public class MovieListActivity extends ElectrodeBaseActivity {
+public class MainActivity extends ElectrodeBaseActivity {
 
     @NonNull
     @Override
     public String getRootComponentName() {
         //First RN component to be started when the activity is launched.
-        return "MoviesList";
+        return "MoviesReloaded";
     }
 
     @Override

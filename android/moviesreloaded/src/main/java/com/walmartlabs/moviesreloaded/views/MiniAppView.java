@@ -44,7 +44,7 @@ public class MiniAppView extends FrameLayout {
         if (context instanceof ElectrodeReactFragmentDelegate.MiniAppRequestListener) {
             mReactDelegate = (ElectrodeReactFragmentDelegate.MiniAppRequestListener) context;
         } else {
-            throw new RuntimeException("Activity must implement ElectrodeReactFragmentDelegate.MiniAppRequestListener for MiniAppView to properly create a react root view");
+            throw new RuntimeException("Activity must implement electrodereactfragmentdelegate.MiniAppRequestListener for MiniAppView to properly create a react root view");
         }
 
         TypedArray attributes = context.obtainStyledAttributes(attrs, R.styleable.MiniAppView);

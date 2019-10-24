@@ -39,6 +39,7 @@ import com.ern.api.impl.core.ElectrodeReactFragmentDelegate;
 import com.ernnavigationApi.ern.api.EnNavigationApi;
 import com.ernnavigationApi.ern.model.NavigationBar;
 import com.ernnavigationApi.ern.model.NavigationBarButton;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.walmartlabs.electrode.reactnative.bridge.helpers.Logger;
 
 public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDelegate<MiniAppNavRequestListener> {
@@ -132,7 +133,9 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
     @CallSuper
     public void onResume() {
         super.onResume();
-        mNavViewModel.registerNavRequestHandler();
+        if (!(mFragment instanceof BottomSheetDialogFragment)) {
+            mNavViewModel.registerNavRequestHandler();
+        }
     }
 
     @CallSuper
@@ -155,7 +158,9 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
     @CallSuper
     public void onPause() {
         super.onPause();
-        mNavViewModel.unRegisterNavRequestHandler();
+        if (!(mFragment instanceof BottomSheetDialogFragment)) {
+            mNavViewModel.unRegisterNavRequestHandler();
+        }
     }
 
     @Override

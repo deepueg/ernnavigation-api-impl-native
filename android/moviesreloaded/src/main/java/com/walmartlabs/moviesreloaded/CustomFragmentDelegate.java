@@ -16,6 +16,8 @@ public class CustomFragmentDelegate extends ElectrodeReactFragmentNavDelegate {
     @Override
     protected Class<? extends Fragment> fragmentClassForRoute(@NonNull Route route) {
         //For all routes.
-        return ChildFragment.class;
+        return MyBottomFragment.class;
     }
+
+
 }
