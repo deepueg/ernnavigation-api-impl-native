@@ -1,24 +1,6 @@
-/*
- * Copyright 2019 Walmart Labs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.ern.api.impl.navigation;
 
-
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -34,22 +16,23 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
-import com.ern.api.impl.core.ElectrodeReactFragmentActivityDelegate.StartMiniAppConfig;
-import com.ern.api.impl.core.ElectrodeReactFragmentDelegate;
+import com.ern.api.impl.core.ElectrodeBaseFragmentDelegate;
+import com.ern.api.impl.core.ElectrodeFragmentConfig;
+import com.ern.api.impl.core.LaunchConfig;
 import com.ernnavigationApi.ern.api.EnNavigationApi;
 import com.ernnavigationApi.ern.model.NavigationBar;
 import com.ernnavigationApi.ern.model.NavigationBarButton;
 import com.walmartlabs.electrode.reactnative.bridge.helpers.Logger;
 
-/**
- * @deprecated use {@link ElectrodeNavigationFragmentDelegate}
- */
-@Deprecated
-public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDelegate<MiniAppNavRequestListener> {
-    private static final String TAG = ElectrodeReactFragmentNavDelegate.class.getSimpleName();
+public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragmentDelegate.ElectrodeActivityListener, C extends ElectrodeFragmentConfig> extends ElectrodeBaseFragmentDelegate<ElectrodeNavigationActivityListener, ElectrodeNavigationFragmentConfig> {
+
+    private static final String TAG = ElectrodeNavigationFragmentDelegate.class.getSimpleName();
 
     private ReactNavigationViewModel mNavViewModel;
+    @Nullable
     private FragmentNavigator mFragmentNavigator;
+    @Nullable
+    private OnUpdateNextPageLaunchConfigListener mOnUpdateNextPageLaunchConfigListener;
     private OnNavBarItemClickListener navBarButtonClickListener;
 
     @Nullable
@@ -59,7 +42,7 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
         @Override
         public void onChanged(@Nullable Route route) {
             if (route != null && !route.isCompleted()) {
-                Logger.d(TAG, "Delegate:%s received a new navigation route: %s", ElectrodeReactFragmentNavDelegate.this, route.getArguments());
+                Logger.d(TAG, "Delegate:%s received a new navigation route: %s", ElectrodeNavigationFragmentDelegate.this, route.getArguments());
 
                 if (!route.getArguments().containsKey(ReactNavigationViewModel.KEY_NAV_TYPE)) {
                     throw new IllegalStateException("Missing NAV_TYPE in route arguments");
@@ -84,38 +67,39 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
                 if (!route.isCompleted()) {
                     throw new IllegalStateException("Should never reach here. A result should be set for the route at this point. Make sure a setResult is called on the route object after the appropriate action is taken on a nav type.");
                 }
-                Logger.d(TAG, "Nav request handling completed by delegate: %s", ElectrodeReactFragmentNavDelegate.this);
+                Logger.d(TAG, "Nav request handling completed by delegate: %s", ElectrodeNavigationFragmentDelegate.this);
             } else {
-                Logger.d(TAG, "Delegate:%s has ignored an already handled route: %s, ", ElectrodeReactFragmentNavDelegate.this, route != null ? route.getArguments() : null);
+                Logger.d(TAG, "Delegate:%s has ignored an already handled route: %s, ", ElectrodeNavigationFragmentDelegate.this, route != null ? route.getArguments() : null);
             }
         }
     };
 
-    @SuppressWarnings("WeakerAccess")
-    public ElectrodeReactFragmentNavDelegate(@NonNull Fragment fragment) {
-        super(fragment);
-        if (mFragment instanceof FragmentNavigator) {
-            mFragmentNavigator = (FragmentNavigator) mFragment;
-        } else {
-            throw new RuntimeException(mFragment
-                    + " must implement ElectrodeReactFragmentNavDelegate.FragmentNavigator");
+    /**
+     * @param fragment {@link Fragment} current Fragment
+     */
+    public ElectrodeNavigationFragmentDelegate(@NonNull Fragment fragment) {
+        this(fragment, null);
+    }
+
+    /**
+     * @param fragment       {@link Fragment} current Fragment
+     * @param fragmentConfig {@link ElectrodeFragmentConfig} Configuration used by the fragment delegate while creating the view.
+     */
+    public ElectrodeNavigationFragmentDelegate(@NonNull Fragment fragment, @Nullable ElectrodeNavigationFragmentConfig fragmentConfig) {
+        super(fragment, fragmentConfig);
+        if (mFragment instanceof ElectrodeNavigationFragmentDelegate.FragmentNavigator) {
+            mFragmentNavigator = (ElectrodeNavigationFragmentDelegate.FragmentNavigator) mFragment;
+        }
+
+        if (mFragment instanceof OnUpdateNextPageLaunchConfigListener) {
+            mOnUpdateNextPageLaunchConfigListener = (OnUpdateNextPageLaunchConfigListener) mFragment;
         }
 
         if (fragment instanceof OnNavBarItemClickListener) {
             navBarButtonClickListener = (OnNavBarItemClickListener) fragment;
         } else {
-            navBarButtonClickListener = new DefaultNavBarButtonClickListener();
+            navBarButtonClickListener = new ElectrodeNavigationFragmentDelegate.DefaultNavBarButtonClickListener();
         }
-    }
-
-    @Override
-    @CallSuper
-    public void onAttach(Context context) {
-        if (!(context instanceof MiniAppNavRequestListener)) {
-            throw new RuntimeException(context.toString()
-                    + " must implement a MiniAppNavRequestListener");
-        }
-        super.onAttach(context);
     }
 
     @Override
@@ -139,12 +123,14 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
         mNavViewModel.registerNavRequestHandler();
     }
 
+    @SuppressWarnings("unused")
     @CallSuper
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         mMenu = menu;
         updateNavBar(mFragment.getArguments());
     }
 
+    @SuppressWarnings("unused")
     @CallSuper
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
@@ -169,12 +155,11 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
             mMenu = null;
         }
         mFragmentNavigator = null;
-        mMiniAppRequestListener = null;
     }
 
     private void back(@NonNull Route route) {
         //Manage fragment back-stack popping. If the given route.path is not in the stack pop a new fragment.
-        boolean result = mMiniAppRequestListener.backToMiniApp(route.getArguments().getString("path"));
+        boolean result = mElectrodeActivityListener.backToMiniApp(route.getArguments().getString("path"));
         route.setResult(result, !result ? "back navigation failed. component not found in the back stack" : null);
     }
 
@@ -188,7 +173,7 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
 
     private void finish(@NonNull Route route) {
         Logger.d(TAG, "finish triggered by RN. Hosting activity will be notified.");
-        mMiniAppRequestListener.finishFlow(NavUtils.getPayload(route.getArguments()));
+        mElectrodeActivityListener.finishFlow(NavUtils.getPayload(route.getArguments()));
         route.setResult(true, null);
     }
 
@@ -198,15 +183,14 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
 
         if (!TextUtils.isEmpty(path)) {
             //If the hosting activity or fragment has not handled the navigation fall back to the default.
-            if (!mMiniAppRequestListener.navigate(route) && !mFragmentNavigator.navigate(route)) {
-                Bundle arguments = route.getArguments();
-                assert path != null;
-                if (shouldUseChildFragmentManager()) {
-                    StartMiniAppConfig config = new StartMiniAppConfig.Builder().fragmentManager(mFragment.getChildFragmentManager()).build();
-                    ((MiniAppNavConfigRequestListener) mMiniAppRequestListener).startMiniAppFragment(path, arguments, config);
-                } else {
-                    mMiniAppRequestListener.startMiniAppFragment(path, arguments);
+            if (!mElectrodeActivityListener.navigate(route) && (mFragmentNavigator == null || !mFragmentNavigator.navigate(route))) {
+                LaunchConfig launchConfig = createDefaultLaunchConfig(route);
+                if (mOnUpdateNextPageLaunchConfigListener != null) {
+                    //noinspection ConstantConditions
+                    mOnUpdateNextPageLaunchConfigListener.updateNextPageLaunchConfig(path, launchConfig);
                 }
+                //noinspection ConstantConditions
+                mElectrodeActivityListener.startMiniAppFragment(path, launchConfig);
             }
             route.setResult(true, "Navigation completed.");
         } else {
@@ -214,15 +198,23 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
         }
     }
 
-    private boolean shouldUseChildFragmentManager() {
-        if (mFragment instanceof UseChildFragmentManagerIndicator) {
-            if (mFragment.getActivity() instanceof MiniAppNavConfigRequestListener) {
-                return true;
-            } else {
-                Logger.w(TAG, "Will not use fragment's child fragment manager.\nTo use this, please make sure the parent activity implements MiniAppNavConfigRequestListener");
-            }
-        }
-        return false;
+
+    private LaunchConfig createDefaultLaunchConfig(@NonNull Route route) {
+        LaunchConfig launchConfig = new LaunchConfig();
+        launchConfig.setInitialProps(route.getArguments());
+        launchConfig.setFragmentManager(mFragmentConfig != null && mFragmentConfig.useChildFragmentManager ? mFragment.getChildFragmentManager() : null);
+        return launchConfig;
+    }
+
+    /**
+     * Override this method if you want to update launch config before it's built.
+     *
+     * @param nextPageName {@link String} Next page name
+     * @param launchConfig {@link LaunchConfig} with default config values pre-populated for the next page fragment launch.
+     *                     Update this config with new props, different fragment class names, layouts etc.
+     */
+    protected void updateNextPageLaunchConfig(@NonNull final String nextPageName, @NonNull final LaunchConfig launchConfig) {
+        //Do nothing. Placeholder for child delegates to add data.
     }
 
     private boolean updateNavBar(@Nullable Bundle arguments) {
@@ -246,6 +238,10 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
         }
     }
 
+
+    /**
+     * Fragments can implement this interface when it needs to override a navigate call.
+     */
     public interface FragmentNavigator {
         /**
          * Use to delegate a navigate call to the fragment before it is being handled by the delegate.
@@ -257,12 +253,16 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
     }
 
     /**
-     * Marker interface that tells the delegate that the new fragment needs to be added through the childFragmentManager instead of the activity fragment manager.
-     * <p>
-     * Note: For this to work properly, make sure that the parent activity of your Fragment implements {@link MiniAppNavConfigRequestListener}
+     * Fragments can implement this interface when they need to customize the defaultLaunchConfog {@link LaunchConfig} while navigating to a new page.
      */
-    public interface UseChildFragmentManagerIndicator {
-
+    public interface OnUpdateNextPageLaunchConfigListener {
+        /**
+         * Simply update the config here.
+         *
+         * @param nextPageName        {@link String} Next page name
+         * @param defaultLaunchConfig {@link LaunchConfig} with default values for the next page launch config.
+         */
+        void updateNextPageLaunchConfig(@NonNull final String nextPageName, @NonNull final LaunchConfig defaultLaunchConfig);
     }
 
     private void updateNavBar(@NonNull NavigationBar navigationBar) {
@@ -292,5 +292,3 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
             }
     }
 }
-
-

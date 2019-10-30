@@ -1,19 +1,3 @@
-/*
- * Copyright 2019 Walmart Labs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.ern.api.impl.core;
 
 import android.content.Context;
@@ -25,9 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.CallSuper;
-import androidx.annotation.IdRes;
 import androidx.annotation.IntDef;
-import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -45,102 +27,133 @@ import com.walmartlabs.electrode.reactnative.bridge.helpers.Logger;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-/**
- * This class is deprecated as a more simplified version of this is now available.
- *
- * @deprecated Use {@link ElectrodeBaseFragmentDelegate}
- */
-@Deprecated
-public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDelegate.MiniAppRequestListener> implements LifecycleObserver {
-    private static final String TAG = ElectrodeReactFragmentDelegate.class.getSimpleName();
+public class ElectrodeBaseFragmentDelegate<T extends ElectrodeBaseFragmentDelegate.ElectrodeActivityListener, C extends ElectrodeFragmentConfig> implements LifecycleObserver {
+    private static final String TAG = ElectrodeBaseFragmentDelegate.class.getSimpleName();
 
     protected final Fragment mFragment;
-    protected T mMiniAppRequestListener;
-    private DataProvider mDataProvider;
 
+    protected T mElectrodeActivityListener;
+
+    @Nullable
+    protected C mFragmentConfig;
+
+    @Nullable
     private ReactRootView mMiniAppView;
+
+    @Nullable
     private View mRootView;
 
-    private String miniAppComponentName;
+    private String miniAppComponentName = "NAME_NOT_SET_YET";
 
-    protected ElectrodeReactFragmentDelegate(@NonNull Fragment fragment) {
-        mFragment = fragment;
-        if (mFragment instanceof ElectrodeReactFragmentDelegate.DataProvider) {
-            mDataProvider = (DataProvider) mFragment;
-        } else {
-            throw new IllegalStateException("Fragment should implement ElectrodeReactFragmentDelegate.DataProvider.");
-        }
+    @SuppressWarnings("unused")
+    protected ElectrodeBaseFragmentDelegate(@NonNull Fragment fragment) {
+        this(fragment, null);
     }
 
-    @SuppressWarnings("WeakerAccess")
+    /**
+     * @param fragment       Hosting fragment
+     * @param fragmentConfig Optional config that can be passed if your fragment needs to have a custom layout, etc.
+     */
+    protected ElectrodeBaseFragmentDelegate(@NonNull Fragment fragment, @Nullable C fragmentConfig) {
+        mFragment = fragment;
+        mFragmentConfig = fragmentConfig;
+    }
+
+    @SuppressWarnings("unused")
     public void onAttach(Context context) {
-        if (context instanceof MiniAppRequestListener) {
+        if (context instanceof ElectrodeBaseFragmentDelegate.ElectrodeActivityListener) {
             //noinspection unchecked
-            mMiniAppRequestListener = (T) context;
+            mElectrodeActivityListener = (T) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement a MiniAppRequestListener");
+                    + "Activity must implement a ElectrodeActivityListener");
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
     public void onCreate(@Nullable Bundle savedInstanceState) {
         //PlaceHolder
     }
 
+    /**
+     * Returns a ReactRootView of the passed MiniApp component (component name provided inside arguments under #KEY_MINI_APP_COMPONENT_NAME)
+     * <p> Or
+     * Returns a View hierarchy if a valid {@link ElectrodeFragmentConfig#fragmentLayoutId} layout xml resource is passed.
+     * Pass a valid {@link ElectrodeFragmentConfig#reactViewContainerId} for the MiniApp component(provided inside arguments under #KEY_MINI_APP_COMPONENT_NAME) to be inflated properly inside the view hierarchy.
+     *
+     * @param inflater           The LayoutInflater object that can be used to inflates
+     *                           any views in the fragment,
+     * @param container          If non-null, this is the parent view that the fragment's
+     *                           UI should be attached to.  The fragment should not add the view itself,
+     *                           but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     *                           from a previous saved state as given here.
+     * @return View
+     * <p>
+     * Throws {@link IllegalStateException} when either a MiniApp component name is not passed as KEY_MINI_APP_COMPONENT_NAME in arguments or a valid lauout xml is not provided via {@link ElectrodeFragmentConfig#fragmentLayoutId}
+     */
+    @SuppressWarnings("unused")
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (mFragment.getArguments() == null) {
-            throw new IllegalStateException("Looks like the the fragment arguments are not set. \"miniAppComponentName\" is a required property with a string value");
+        if (mFragment.getArguments() != null) {
+            miniAppComponentName = mFragment.getArguments().getString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME);
         }
 
-        miniAppComponentName = mFragment.getArguments().getString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME);
-        if (TextUtils.isEmpty(miniAppComponentName)) {
-            throw new IllegalStateException("Missing key \"miniAppComponentName\" in args");
-        }
-
-        Logger.d(TAG, "delegate.onCreateView() called. Component name: " + miniAppComponentName);
-        assert miniAppComponentName != null;
-
+        Logger.d(TAG, "delegate.onCreateView() called. MiniApp component name: " + miniAppComponentName);
 
         if (mMiniAppView == null) {
-            mMiniAppView = (ReactRootView) mMiniAppRequestListener.createReactNativeView(miniAppComponentName, initialProps(savedInstanceState != null));
+            if (!TextUtils.isEmpty(miniAppComponentName)) {
+                mMiniAppView = (ReactRootView) mElectrodeActivityListener.createReactNativeView(miniAppComponentName, initialProps(savedInstanceState != null));
+            } else {
+                Logger.d(TAG, "MiniApp view not created");
+            }
         }
 
-        boolean showHomeAsUpEnabled = mFragment.getArguments().getBoolean(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_SHOW_UP_ENABLED, false);
-        if (mDataProvider.fragmentLayoutId() != DataProvider.NONE) {
+        View rootView;
+        if (mFragmentConfig != null && mFragmentConfig.fragmentLayoutId != ElectrodeFragmentConfig.NONE) {
             if (mRootView == null) {
-                mRootView = inflater.inflate(mDataProvider.fragmentLayoutId(), container, false);
+                mRootView = inflater.inflate(mFragmentConfig.fragmentLayoutId, container, false);
 
                 setUpToolBarIfPresent();
 
-                if (mDataProvider.reactViewContainerId() == DataProvider.NONE) {
-                    throw new IllegalStateException("Missing a ViewGroup resource id to mount the ReactNative view. Did you forget to override reactViewContainerId() inside the ElectrodeReactFragmentDelegate.DataProvider implementation.");
-                }
-
-                View view = mRootView.findViewById(mDataProvider.reactViewContainerId());
-                if (view instanceof ViewGroup) {
-                    ((ViewGroup) view).addView(mMiniAppView);
+                if (mFragmentConfig.reactViewContainerId != ElectrodeFragmentConfig.NONE && mMiniAppView != null) {
+                    @SuppressWarnings("ConstantConditions")
+                    View view = mRootView.findViewById(mFragmentConfig.reactViewContainerId);
+                    if (view instanceof ViewGroup) {
+                        ((ViewGroup) view).addView(mMiniAppView);
+                    } else {
+                        throw new IllegalStateException("reactViewContainerId() should represent a ViewGroup to be able to add a react root view inside it.");
+                    }
                 } else {
-                    throw new IllegalStateException("reactViewContainerId() should represent a ViewGroup to be able to add a react root view inside it.");
+                    Logger.i(TAG, "Missing reactViewContainerId() or mMiniAppView is null. Will not add MiniApp view explicitly. Do you have a MiniAppView component defined in your layout xml resource file?.");
                 }
             }
-            handleUpNavigation(showHomeAsUpEnabled);
-            return mRootView;
+            Logger.d(TAG, "Returning view inflated using a custom layout.");
+            rootView = mRootView;
         } else {
-            handleUpNavigation(showHomeAsUpEnabled);
-            return mMiniAppView;
+            if (mMiniAppView == null) {
+                throw new IllegalStateException("MiniAppView is null. Should never reach here. onCreateView() should return a non-null view.");
+            }
+            Logger.d(TAG, "Returning a react root view.");
+            rootView = mMiniAppView;
         }
+
+        boolean showHomeAsUpEnabled = mFragment.getArguments().getBoolean(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_SHOW_UP_ENABLED, false);
+        handleUpNavigation(showHomeAsUpEnabled);
+
+        return rootView;
     }
 
     private void setUpToolBarIfPresent() {
-        if (mDataProvider.toolBarId() != DataProvider.NONE) {
-            Toolbar toolBar = mRootView.findViewById(mDataProvider.toolBarId());
+        if (mFragmentConfig != null && mFragmentConfig.toolBarId != ElectrodeFragmentConfig.NONE) {
+            if (mRootView == null) {
+                throw new IllegalStateException("Should never reach here. mRootView should have been populated before calling this method");
+            }
+            Toolbar toolBar = mRootView.findViewById(mFragmentConfig.toolBarId);
             if (mFragment.getActivity() instanceof AppCompatActivity) {
                 AppCompatActivity appCompatActivity = (AppCompatActivity) mFragment.getActivity();
                 if (appCompatActivity.getSupportActionBar() == null) {
                     appCompatActivity.setSupportActionBar(toolBar);
                 } else {
-                    Logger.w(TAG, "Hiding fragment layout toolBar. The Activity already has an action bar setup.");
+                    Logger.w(TAG, "Hiding fragment layout toolBar. The Activity already has an action bar setup, consider removing the toolBar from your fragment layout.");
                     toolBar.setVisibility(View.GONE);
                 }
             } else {
@@ -161,12 +174,7 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
             initialProps.putAll(new ErnNavRoute(initialProps).toBundle());
         }
 
-        Bundle props = mDataProvider.initialProps();
-        if (props != null) {
-            initialProps.putAll(props);
-        }
-
-        props = mMiniAppRequestListener.globalProps();
+        Bundle props = mElectrodeActivityListener.globalProps();
         if (props != null) {
             initialProps.putAll(props);
         }
@@ -174,55 +182,61 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
         return initialProps;
     }
 
+    @SuppressWarnings("unused")
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         //PlaceHolder
     }
 
+    @SuppressWarnings("unused")
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    @SuppressWarnings("WeakerAccess")
     public void onStart() {
         Logger.d(TAG, "inside onStart");
         //PlaceHolder
     }
 
+    @SuppressWarnings("unused")
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     public void onResume() {
         Logger.d(TAG, "inside onResume");
         //PlaceHolder
     }
 
+    @SuppressWarnings("unused")
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     public void onPause() {
         Logger.d(TAG, "inside onPause");
         //PlaceHolder
     }
 
+    @SuppressWarnings("unused")
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     public void onStop() {
         Logger.d(TAG, "inside onStop");
         //PlaceHolder
     }
 
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings("unused")
     public void onDestroyView() {
         Logger.d(TAG, "inside onDestroyView");
         //PlaceHolder
     }
 
+    @SuppressWarnings("unused")
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     @CallSuper
     public void onDestroy() {
         Logger.d(TAG, "inside onDestroy");
         if (mMiniAppView != null) {
             assert mFragment.getArguments() != null;
-            mMiniAppRequestListener.removeReactNativeView(miniAppComponentName, mMiniAppView);
+            mElectrodeActivityListener.removeReactNativeView(miniAppComponentName, mMiniAppView);
             mMiniAppView = null;
+            mFragmentConfig = null;
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings("unused")
     public void onDetach() {
-        mMiniAppRequestListener = null;
+        //PlaceHolder
     }
 
     @NonNull
@@ -231,6 +245,7 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
         return super.toString() + miniAppComponentName;
     }
 
+    @SuppressWarnings("unused")
     protected String getReactComponentName() {
         if (mFragment.getArguments() != null && mFragment.getArguments().getString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME) != null) {
             return mFragment.getArguments().getString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME);
@@ -252,56 +267,15 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
         }
     }
 
-    /**
-     * This needs to be implemented by the fragment. The APIs in this interface should ask for data that needs to be provided by the fragment.
-     * @deprecated This interface is no longer required by the new delegate {@link ElectrodeBaseFragmentDelegate}
-     */
-    @Deprecated
-    public interface DataProvider {
-        int NONE = 0;
-
-        /**
-         * Initial properties needed for rendering the react component
-         *
-         * @return Bundle
-         */
-        @Nullable
-        Bundle initialProps();
-
-
-        /***
-         * Return the layout xml that will be used by the fragment to create the view.
-         * This is the layout where you can place your toolbar(optional) and an empty view group to inflate the react native view.
-         * @return int, a valid @{@link LayoutRes } or {@link #NONE}
-         */
-        @LayoutRes
-        int fragmentLayoutId();
-
-        /**
-         * Return the container ViewGroup id to which a react native view can be added.
-         *
-         * @return int a valid {@link IdRes} or {@link #NONE}
-         */
-        @IdRes
-        int reactViewContainerId();
-
-        /**
-         * Provide the id of the toolbar if tool bar is part of the fragment layout, return NONE otherwise.
-         *
-         * @return a valid {@link IdRes} or {@link #NONE}
-         */
-        @IdRes
-        int toolBarId();
-    }
-
     /***
      * Interface that connects the fragment delegate to the hosting activity.
      */
-    public interface MiniAppRequestListener {
+    public interface ElectrodeActivityListener {
 
         int ADD_TO_BACKSTACK = 0;
         int DO_NOT_ADD_TO_BACKSTACK = 1;
 
+        @SuppressWarnings("unused")
         @IntDef({ADD_TO_BACKSTACK, DO_NOT_ADD_TO_BACKSTACK})
         @Retention(RetentionPolicy.SOURCE)
         @interface AddToBackStackState {
@@ -312,12 +286,10 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
          *
          * @param appName React native root component name
          * @param props   Optional properties for the component
-         * @return
+         * @return View returns a {@link ReactRootView} for the given component.
          */
         View createReactNativeView(@NonNull String appName, @Nullable Bundle props);
 
-        @Deprecated
-        void removeReactNativeView(@NonNull String appName);
 
         /**
          * Un-mounts a given react native view component. Typically done when your fragment is destroyed.
@@ -331,17 +303,10 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
          * starts a new fragment and inflate it with the given react component.
          *
          * @param componentName react view component name.
-         * @param props         optional properties for the component rendering.
+         * @param launchConfig  {@link LaunchConfig} to allow custom launch options for a fragment.
          */
-        void startMiniAppFragment(@NonNull String componentName, @Nullable Bundle props);
-
-        /**
-         * starts a new fragment and inflate it with the given react component.
-         *
-         * @param componentName react view component name.
-         * @param props         optional properties for the component rendering.
-         */
-        void startMiniAppFragment(@NonNull Class<? extends Fragment> fragmentClass, @NonNull String componentName, @Nullable Bundle props);
+        @SuppressWarnings("unused")
+        void startMiniAppFragment(@NonNull String componentName, @NonNull LaunchConfig launchConfig);
 
         /**
          * Utilize this api to pass in global props that is required by all components involved in a feature.
@@ -354,9 +319,10 @@ public class ElectrodeReactFragmentDelegate<T extends ElectrodeReactFragmentDele
         /**
          * Cal this to intercept react-native dev menu
          *
-         * @param event
+         * @param event {@link KeyEvent}
          * @return true if the menu was shown false otherwise
          */
+        @SuppressWarnings("unused")
         boolean showDevMenuIfDebug(KeyEvent event);
     }
 }
