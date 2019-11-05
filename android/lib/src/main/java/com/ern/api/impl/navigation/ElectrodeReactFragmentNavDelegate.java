@@ -241,8 +241,9 @@ public class ElectrodeReactFragmentNavDelegate extends ElectrodeReactFragmentDel
     private class DefaultNavBarButtonClickListener implements OnNavBarItemClickListener {
 
         @Override
-        public void onNavBarButtonClicked(@NonNull NavigationBarButton button, @NonNull MenuItem item) {
+        public boolean onNavBarButtonClicked(@NonNull NavigationBarButton button, @NonNull MenuItem item) {
             EnNavigationApi.events().emitOnNavButtonClick(button.getId());
+            return true;
         }
     }
 

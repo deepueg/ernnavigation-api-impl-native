@@ -26,5 +26,11 @@ import com.ernnavigationApi.ern.model.NavigationBarButton;
  * Click listener that a fragment can implement if it want to handle a action bar menu item click inside a fragment.
  */
 public interface OnNavBarItemClickListener {
-    void onNavBarButtonClicked(@NonNull NavigationBarButton button, @NonNull MenuItem item);
+    /**
+     * @param button {@link NavigationBarButton} button set by ReactNative component.
+     * @param item   {@link MenuItem}
+     * @return true if the button click was handled for this button, false otherwise.
+     * Retuning false will result in sending a notification back to the react native component's Component.onNavButtonPress(buttonId)
+     */
+    boolean onNavBarButtonClicked(@NonNull NavigationBarButton button, @NonNull MenuItem item);
 }

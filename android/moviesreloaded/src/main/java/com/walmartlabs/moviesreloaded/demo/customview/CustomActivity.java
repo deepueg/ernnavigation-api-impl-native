@@ -16,7 +16,7 @@ public class CustomActivity extends ElectrodeBaseActivity {
     @NonNull
     @Override
     protected String getRootComponentName() {
-        //Pass empty component as the first view is loaded inside the RootFragment layout xml.
+        //Pass empty component since the first view is loaded inside the RootFragment layout xml.
         return "";
     }
 

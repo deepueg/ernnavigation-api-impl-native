@@ -82,9 +82,12 @@ final class MenuUtil {
 
         MenuItem menuItem = menu.add(Menu.NONE, itemId, Menu.NONE, button.getTitle() != null ? button.getTitle() : button.getId());
 
-        if (icon == Menu.NONE && button.getIcon() != null) {
+        if (icon != Menu.NONE) {
+            Logger.d(TAG, "setting native provided menu icon, ignoring icon passed inside NavigationBarButton");
+            menuItem.setIcon(icon);
+            menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        } else if (button.getIcon() != null) {
             String iconLocation = button.getIcon();
-
             if (canLoadIconFromURI(iconLocation)) {
                 try {
                     Logger.d(TAG, "Attempting to load icon from URL: " + iconLocation);
@@ -105,7 +108,7 @@ final class MenuUtil {
                     menuItem.setIcon(icon);
                     menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
                 } else {
-                    Logger.i(TAG, "Icon not found for button:%s", button.getId());
+                    Logger.w(TAG, "Icon not found for button:%s", button.getId());
                 }
             }
         }

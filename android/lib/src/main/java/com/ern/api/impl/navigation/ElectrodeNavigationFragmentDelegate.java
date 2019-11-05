@@ -33,7 +33,12 @@ public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragment
     private FragmentNavigator mFragmentNavigator;
     @Nullable
     private OnUpdateNextPageLaunchConfigListener mOnUpdateNextPageLaunchConfigListener;
+
+    @NonNull
     private OnNavBarItemClickListener navBarButtonClickListener;
+
+    @Nullable
+    private MenuItemDataProvider mMenuItemDataProvider;
 
     @Nullable
     private Menu mMenu;
@@ -95,11 +100,7 @@ public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragment
             mOnUpdateNextPageLaunchConfigListener = (OnUpdateNextPageLaunchConfigListener) mFragment;
         }
 
-        if (fragment instanceof OnNavBarItemClickListener) {
-            navBarButtonClickListener = (OnNavBarItemClickListener) fragment;
-        } else {
-            navBarButtonClickListener = new ElectrodeNavigationFragmentDelegate.DefaultNavBarButtonClickListener();
-        }
+        navBarButtonClickListener = new ElectrodeNavigationFragmentDelegate.DefaultNavBarButtonClickListener();
     }
 
     @Override
@@ -155,6 +156,10 @@ public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragment
             mMenu = null;
         }
         mFragmentNavigator = null;
+    }
+
+    public void setMenuItemDataProvider(@NonNull MenuItemDataProvider menuItemDataProvider) {
+        mMenuItemDataProvider = menuItemDataProvider;
     }
 
     private void back(@NonNull Route route) {
@@ -232,9 +237,18 @@ public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragment
 
     private class DefaultNavBarButtonClickListener implements OnNavBarItemClickListener {
 
+        private OnNavBarItemClickListener suppliedButtonClickListener;
+
+        DefaultNavBarButtonClickListener() {
+            this.suppliedButtonClickListener = (mFragment instanceof OnNavBarItemClickListener) ? (OnNavBarItemClickListener) mFragment : null;
+        }
+
         @Override
-        public void onNavBarButtonClicked(@NonNull NavigationBarButton button, @NonNull MenuItem item) {
-            EnNavigationApi.events().emitOnNavButtonClick(button.getId());
+        public boolean onNavBarButtonClicked(@NonNull NavigationBarButton button, @NonNull MenuItem item) {
+            if (suppliedButtonClickListener != null && !suppliedButtonClickListener.onNavBarButtonClicked(button, item)) {
+                EnNavigationApi.events().emitOnNavButtonClick(button.getId());
+            }
+            return true;
         }
     }
 
@@ -269,7 +283,7 @@ public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragment
         updateTitle(navigationBar);
 
         if (mMenu != null && mFragment.getActivity() != null) {
-            MenuUtil.updateMenuItems(mMenu, navigationBar, navBarButtonClickListener, null/*FIXME*/, mFragment.getActivity());
+            MenuUtil.updateMenuItems(mMenu, navigationBar, navBarButtonClickListener, mMenuItemDataProvider, mFragment.getActivity());
         }
     }
 
