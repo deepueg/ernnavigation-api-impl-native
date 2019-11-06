@@ -3,6 +3,7 @@ package com.walmartlabs.moviesreloaded.demo.customview;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.ern.api.impl.core.LaunchConfig;
 import com.ern.api.impl.navigation.ElectrodeBaseActivity;
 import com.walmartlabs.moviesreloaded.R;
 
@@ -29,5 +30,12 @@ public class CustomActivity extends ElectrodeBaseActivity {
     @Override
     protected Class<? extends Fragment> miniAppFragmentClass() {
         return RootFragment.class;
+    }
+
+    @Override
+    protected LaunchConfig createDefaultLaunchConfig() {
+        LaunchConfig config =  super.createDefaultLaunchConfig();
+        config.setForceUpEnabled(true);
+        return config;
     }
 }

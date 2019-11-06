@@ -3,8 +3,10 @@ package com.walmartlabs.moviesreloaded;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.ern.api.impl.core.LaunchConfig;
 import com.ern.api.impl.navigation.ElectrodeBaseActivity;
 import com.ern.api.impl.navigation.MiniAppNavigationFragment;
+import com.ern.api.impl.navigation.Route;
 
 // This is the main activity that gets launched upon app start
 // It just launches the activity containing the miniapp
@@ -32,5 +34,21 @@ public class MainActivity extends ElectrodeBaseActivity {
     @Override
     protected Class<? extends Fragment> miniAppFragmentClass() {
         return MiniAppNavigationFragment.class;
+    }
+
+    @Override
+    public boolean navigate(Route route) {
+        if(route == null) {
+            //Start a new activity
+            return true;
+        }
+        return super.navigate(route);
+    }
+
+    @Override
+    protected LaunchConfig createDefaultLaunchConfig() {
+        LaunchConfig config =  super.createDefaultLaunchConfig();
+        config.setForceUpEnabled(true);
+        return config;
     }
 }

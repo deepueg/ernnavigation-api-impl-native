@@ -6,6 +6,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.ern.api.impl.core.LaunchConfig;
 import com.ern.api.impl.navigation.ElectrodeBaseActivity;
 import com.walmartlabs.moviesreloaded.R;
 
@@ -41,5 +42,12 @@ public class NavMenuActivity extends ElectrodeBaseActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected LaunchConfig createDefaultLaunchConfig() {
+        LaunchConfig config =  super.createDefaultLaunchConfig();
+        config.setForceUpEnabled(true);
+        return config;
     }
 }
