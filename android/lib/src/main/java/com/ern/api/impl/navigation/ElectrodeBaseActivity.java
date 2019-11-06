@@ -98,7 +98,7 @@ public abstract class ElectrodeBaseActivity extends AppCompatActivity implements
         return new ElectrodeBaseActivityDelegate(this, getRootComponentName(), createDefaultLaunchConfig());
     }
 
-    private LaunchConfig createDefaultLaunchConfig() {
+    protected LaunchConfig createDefaultLaunchConfig() {
         LaunchConfig defaultLaunchConfig = new LaunchConfig();
         defaultLaunchConfig.setFragmentClass(miniAppFragmentClass());
         defaultLaunchConfig.setFragmentContainerId(getFragmentContainerId());

@@ -26,30 +26,19 @@ public class ElectrodeBaseActivityDelegate extends ElectrodeReactActivityDelegat
     protected FragmentActivity mFragmentActivity;
     private final LaunchConfig mDefaultLaunchConfig;
     private final String mRootComponentName;
-    private boolean mUpEnabledForRoot;
-
-    /**
-     * Set this to true if you want to enable up navigation for the root component.
-     * <p>
-     * PS: This method needs to be called before {@link #onCreate(Bundle)} is called.
-     */
-    @SuppressWarnings("unused")
-    public void setUpEnabledForRoot(boolean upEnabledForRoot) {
-        mUpEnabledForRoot = upEnabledForRoot;
-    }
 
     /**
      * @param activity            Hosting activity
      * @param rootComponentName   First react native component to be launched.
-     * @param initialLaunchConfig : {@link LaunchConfig} that acts as the the initial configuration to load the rootComponent.
+     * @param defaultLaunchConfig : {@link LaunchConfig} that acts as the the initial configuration to load the rootComponent as well as the default launch config for subsequent navigation flows.
      *                            This configuration will also be used as a default configuration when the root component tries to navigate to a new pages if a proper launch config is passed inside {@link #startMiniAppFragment(String, LaunchConfig)}.
      */
-    public ElectrodeBaseActivityDelegate(@NonNull FragmentActivity activity, @Nullable String rootComponentName, @NonNull LaunchConfig initialLaunchConfig) {
+    public ElectrodeBaseActivityDelegate(@NonNull FragmentActivity activity, @Nullable String rootComponentName, @NonNull LaunchConfig defaultLaunchConfig) {
         super(activity, null);
 
         mFragmentActivity = activity;
         mRootComponentName = rootComponentName;
-        mDefaultLaunchConfig = initialLaunchConfig;
+        mDefaultLaunchConfig = defaultLaunchConfig;
         if (mFragmentActivity instanceof BackKeyHandler) {
             setBackKeyHandler((BackKeyHandler) mFragmentActivity);
         }
@@ -131,7 +120,7 @@ public class ElectrodeBaseActivityDelegate extends ElectrodeReactActivityDelegat
 
         Bundle props = launchConfig.initialProps != null ? launchConfig.initialProps : new Bundle();
         props.putString(ActivityDelegateConstants.KEY_MINI_APP_COMPONENT_NAME, componentName);
-        props.putBoolean(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_SHOW_UP_ENABLED, shouldShowUpEnabled());
+        props.putBoolean(ActivityDelegateConstants.KEY_MINI_APP_FRAGMENT_SHOW_UP_ENABLED, shouldShowUpEnabled(launchConfig.forceUpEnabled));
         fragment.setArguments(props);
 
         Logger.d(TAG, "starting fragment: fragmentClass->%s, props->%s", fragment.getClass().getSimpleName(), props);
@@ -172,9 +161,9 @@ public class ElectrodeBaseActivityDelegate extends ElectrodeReactActivityDelegat
         return mFragmentActivity.getSupportFragmentManager();
     }
 
-    private boolean shouldShowUpEnabled() {
+    private boolean shouldShowUpEnabled(boolean forceUpEnabled) {
         int backStackCount = mFragmentActivity.getSupportFragmentManager().getBackStackEntryCount();
-        return backStackCount > 0 || (backStackCount == 0 && mUpEnabledForRoot);
+        return forceUpEnabled || backStackCount > 0;
     }
 
     @SuppressWarnings("unused")

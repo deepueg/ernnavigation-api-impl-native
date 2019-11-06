@@ -60,6 +60,11 @@ public class LaunchConfig {
     boolean showAsBottomSheet;
 
     /**
+     * Set this to true if you want to force enable up navigation for component.
+     */
+    boolean forceUpEnabled;
+
+    /**
      * Set this value to manage the fragment back stack
      */
     @AddToBackStackState
@@ -120,5 +125,9 @@ public class LaunchConfig {
 
     public void setAddToBackStack(int addToBackStack) {
         this.addToBackStack = addToBackStack;
+    }
+
+    public void setForceUpEnabled(boolean forceUpEnabled) {
+        this.forceUpEnabled = forceUpEnabled;
     }
 }
