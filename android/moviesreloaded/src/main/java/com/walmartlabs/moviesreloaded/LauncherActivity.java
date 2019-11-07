@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+import com.walmartlabs.moviesreloaded.demo.bottomsheet.modal.ModalBottomSheetActivity;
 import com.walmartlabs.moviesreloaded.demo.customview.CustomActivity;
 import com.walmartlabs.moviesreloaded.demo.navmenuhandler.NavMenuActivity;
 
@@ -28,6 +29,9 @@ public class LauncherActivity extends AppCompatActivity {
                 break;
             case R.id.id_button_navbar:
                 clazz = NavMenuActivity.class;
+                break;
+            case R.id.id_button_bottomsheet:
+                clazz = ModalBottomSheetActivity.class;
                 break;
             default:
                 clazz = MainActivity.class;

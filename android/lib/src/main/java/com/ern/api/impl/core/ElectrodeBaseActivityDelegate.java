@@ -1,7 +1,6 @@
 package com.ern.api.impl.core;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
@@ -131,6 +130,7 @@ public class ElectrodeBaseActivityDelegate extends ElectrodeReactActivityDelegat
         if (launchConfig.showAsBottomSheet) {
             Logger.w(TAG, "TODO: call fragment.show() for a bottom sheet experience");
             //TODO: call fragment.show() for a bottom sheet experience
+            showBottomSheetDialogFragment(fragment, getFragmentManager(launchConfig), tag);
         } else {
             final FragmentManager fragmentManager = getFragmentManager(launchConfig);
             int fragmentContainerId = (launchConfig.fragmentContainerId != LaunchConfig.NONE) ? launchConfig.fragmentContainerId : mDefaultLaunchConfig.fragmentContainerId;
@@ -147,6 +147,18 @@ public class ElectrodeBaseActivityDelegate extends ElectrodeReactActivityDelegat
             transaction.commit();
             Logger.d(TAG, "startMiniAppFragment completed successfully.");
         }
+    }
+
+    /**
+     * Placeholder method that allows custom delegate creation to show bottom sheet fragment.
+     * This is not implemented here since it requires extra dependencies to be added to the library.
+     *
+     * @param fragment
+     * @param fragmentManager
+     * @param tag
+     */
+    protected void showBottomSheetDialogFragment(Fragment fragment, FragmentManager fragmentManager, String tag) {
+        throw new RuntimeException("This needs to be implemented on the application level.");
     }
 
     private FragmentManager getFragmentManager(@NonNull LaunchConfig launchConfig) {

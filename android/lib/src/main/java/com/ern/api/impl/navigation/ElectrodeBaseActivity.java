@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 public abstract class ElectrodeBaseActivity extends AppCompatActivity implements ElectrodeNavigationActivityListener {
     public static final int DEFAULT_TITLE = -1;
+    public static final int NONE = 0;
 
     protected ElectrodeBaseActivityDelegate mElectrodeReactNavDelegate;
 
@@ -111,7 +112,9 @@ public abstract class ElectrodeBaseActivity extends AppCompatActivity implements
     @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(mainLayout());
+        if (mainLayout() != NONE) {
+            setContentView(mainLayout());
+        }
 
         mElectrodeReactNavDelegate = createElectrodeDelegate();
         getLifecycle().addObserver(mElectrodeReactNavDelegate);

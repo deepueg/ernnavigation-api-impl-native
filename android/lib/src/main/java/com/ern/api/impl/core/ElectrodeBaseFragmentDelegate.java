@@ -103,7 +103,7 @@ public class ElectrodeBaseFragmentDelegate<T extends ElectrodeBaseFragmentDelega
             if (!TextUtils.isEmpty(miniAppComponentName)) {
                 mMiniAppView = (ReactRootView) mElectrodeActivityListener.createReactNativeView(miniAppComponentName, initialProps(savedInstanceState != null));
             } else {
-                Logger.d(TAG, "MiniApp view not created");
+                Logger.i(TAG, "Missing miniAppComponentName inside arguments, will not create a MiniApp view.");
             }
         }
 

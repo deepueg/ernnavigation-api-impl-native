@@ -115,7 +115,6 @@ public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragment
         super.onActivityCreated(savedInstanceState);
         mNavViewModel = ViewModelProviders.of(mFragment).get(ReactNavigationViewModel.class);
         mNavViewModel.getRouteLiveData().observe(mFragment.getViewLifecycleOwner(), routeObserver);
-
     }
 
     @CallSuper
