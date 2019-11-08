@@ -3,6 +3,7 @@
     <string name="experience_default">Default Experience</string>
     <string name="experience_customview">Custom View</string>
     <string name="experience_customnavbar">Custom NavBar</string>
-    <string name="experience_bottomsheet">Bottom Sheet</string>
+    <string name="experience_bottomsheet">Modal Bottom Sheet</string>
+    <string name="experience_bottomsheet_persistent">Persistent Bottom Sheet</string>
     <string name="launcher_title">Electrode Navigation</string>
 </resources>

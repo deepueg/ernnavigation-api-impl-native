@@ -41,4 +41,12 @@
         android:onClick="handleButtonClick"
         android:text="@string/experience_bottomsheet"
         android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/id_button_persistent_bottomsheet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="handleButtonClick"
+        android:text="@string/experience_bottomsheet_persistent"
+        android:textAllCaps="false" />
 </LinearLayout>

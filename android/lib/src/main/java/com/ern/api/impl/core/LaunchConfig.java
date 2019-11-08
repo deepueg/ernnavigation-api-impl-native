@@ -57,7 +57,7 @@ public class LaunchConfig {
      * Indicates that you want to load the react native component inside  a bottom sheet.
      * This will make sure that the fragment will not be added to the back stack, instead it will be presented as a dialog.
      */
-    boolean showAsBottomSheet;
+    boolean isBottomSheet;
 
     /**
      * Set this to true if you want to force enable up navigation for component.
@@ -111,12 +111,12 @@ public class LaunchConfig {
         }
     }
 
-    public boolean isShowAsBottomSheet() {
-        return showAsBottomSheet;
+    public boolean isBottomSheet() {
+        return isBottomSheet;
     }
 
-    public void setShowAsBottomSheet(boolean showAsBottomSheet) {
-        this.showAsBottomSheet = showAsBottomSheet;
+    public void setBottomSheet(boolean bottomSheet) {
+        this.isBottomSheet = bottomSheet;
     }
 
     public int getAddToBackStack() {

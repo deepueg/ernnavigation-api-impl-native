@@ -244,7 +244,7 @@ public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragment
 
         @Override
         public boolean onNavBarButtonClicked(@NonNull NavigationBarButton button, @NonNull MenuItem item) {
-            if (suppliedButtonClickListener != null && !suppliedButtonClickListener.onNavBarButtonClicked(button, item)) {
+            if (suppliedButtonClickListener == null || !suppliedButtonClickListener.onNavBarButtonClicked(button, item)) {
                 EnNavigationApi.events().emitOnNavButtonClick(button.getId());
             }
             return true;
@@ -279,6 +279,7 @@ public class ElectrodeNavigationFragmentDelegate<T extends ElectrodeBaseFragment
     }
 
     private void updateNavBar(@NonNull NavigationBar navigationBar) {
+        Logger.d(TAG, "Updating nav bar: %s", navigationBar);
         updateTitle(navigationBar);
 
         if (mMenu != null && mFragment.getActivity() != null) {

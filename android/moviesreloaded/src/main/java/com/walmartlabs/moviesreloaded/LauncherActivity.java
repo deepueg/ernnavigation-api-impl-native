@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.walmartlabs.moviesreloaded.demo.bottomsheet.modal.ModalBottomSheetActivity;
+import com.walmartlabs.moviesreloaded.demo.bottomsheet.persistent.PersistentBottomSheetActivity;
 import com.walmartlabs.moviesreloaded.demo.customview.CustomActivity;
 import com.walmartlabs.moviesreloaded.demo.navmenuhandler.NavMenuActivity;
 
@@ -32,6 +33,9 @@ public class LauncherActivity extends AppCompatActivity {
                 break;
             case R.id.id_button_bottomsheet:
                 clazz = ModalBottomSheetActivity.class;
+                break;
+            case R.id.id_button_persistent_bottomsheet:
+                clazz = PersistentBottomSheetActivity.class;
                 break;
             default:
                 clazz = MainActivity.class;

@@ -1,17 +1,18 @@
-package com.walmartlabs.moviesreloaded.demo.bottomsheet.modal;
+package com.walmartlabs.moviesreloaded.demo.bottomsheet.persistent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.ern.api.impl.core.LaunchConfig;
 import com.ern.api.impl.navigation.ElectrodeBaseActivity;
+import com.walmartlabs.moviesreloaded.R;
 
 import org.json.JSONObject;
 
-public class ModalBottomSheetActivity extends ElectrodeBaseActivity {
+public class PersistentBottomSheetActivity extends ElectrodeBaseActivity {
     @Override
     protected int mainLayout() {
-        return NONE;
+        return R.layout.activity_main;
     }
 
     @NonNull
@@ -22,21 +23,20 @@ public class ModalBottomSheetActivity extends ElectrodeBaseActivity {
 
     @Override
     protected int getFragmentContainerId() {
-        return NONE;
+        return R.id.fragment_container;
     }
 
     @Override
     protected LaunchConfig createDefaultLaunchConfig() {
         LaunchConfig config = super.createDefaultLaunchConfig();
-        config.setBottomSheet(true);
         config.setForceUpEnabled(true);
-        config.setFragmentClass(ModalDialogFragment.class);
+        config.setFragmentClass(PersistentBottomSheetFragment.class);
         return config;
     }
 
     @Override
-    protected int title() {
-        return DEFAULT_TITLE;
+    protected boolean hideNavBar() {
+        return true;
     }
 
     @Override
@@ -48,10 +48,5 @@ public class ModalBottomSheetActivity extends ElectrodeBaseActivity {
     public void finish() {
         super.finish();
         overridePendingTransition(0, 0);
-    }
-
-    @Override
-    protected boolean hideNavBar() {
-        return true;
     }
 }

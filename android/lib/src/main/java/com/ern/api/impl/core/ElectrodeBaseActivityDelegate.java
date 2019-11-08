@@ -5,6 +5,7 @@ import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
@@ -127,38 +128,35 @@ public class ElectrodeBaseActivityDelegate extends ElectrodeReactActivityDelegat
     }
 
     private void switchToFragment(@NonNull Fragment fragment, @NonNull LaunchConfig launchConfig, @Nullable String tag) {
-        if (launchConfig.showAsBottomSheet) {
-            Logger.w(TAG, "TODO: call fragment.show() for a bottom sheet experience");
-            //TODO: call fragment.show() for a bottom sheet experience
-            showBottomSheetDialogFragment(fragment, getFragmentManager(launchConfig), tag);
+        if (launchConfig.isBottomSheet) {
+            if (fragment instanceof DialogFragment) {
+                Logger.d(TAG, "Showing dialog fragment");
+                ((DialogFragment) fragment).show(getFragmentManager(launchConfig), tag);
+            } else {
+                Logger.w(TAG, "launch config indicates isBottomSheet but the fragment is not a dialog fragment. Will not show");
+            }
         } else {
             final FragmentManager fragmentManager = getFragmentManager(launchConfig);
             int fragmentContainerId = (launchConfig.fragmentContainerId != LaunchConfig.NONE) ? launchConfig.fragmentContainerId : mDefaultLaunchConfig.fragmentContainerId;
-            if (fragmentContainerId == LaunchConfig.NONE) {
-                throw new RuntimeException("Missing fragmentContainerId to add the " + fragment.getClass().getSimpleName() + ". Should never reach here.");
-            }
+
 
             final FragmentTransaction transaction = fragmentManager.beginTransaction();
+
             if (ADD_TO_BACKSTACK == launchConfig.addToBackStack) {
                 Logger.d(TAG, "fragment(%s) added to back stack", tag);
                 transaction.addToBackStack(tag);
             }
-            transaction.replace(fragmentContainerId, fragment, tag);
+
+            if (fragmentContainerId != LaunchConfig.NONE) {
+                Logger.d(TAG, "replacing fragment inside fragment container");
+                transaction.replace(fragmentContainerId, fragment, tag);
+            } else {
+                throw new RuntimeException("Missing fragmentContainerId to add the " + fragment.getClass().getSimpleName() + ". Should never reach here.");
+
+            }
             transaction.commit();
             Logger.d(TAG, "startMiniAppFragment completed successfully.");
         }
-    }
-
-    /**
-     * Placeholder method that allows custom delegate creation to show bottom sheet fragment.
-     * This is not implemented here since it requires extra dependencies to be added to the library.
-     *
-     * @param fragment
-     * @param fragmentManager
-     * @param tag
-     */
-    protected void showBottomSheetDialogFragment(Fragment fragment, FragmentManager fragmentManager, String tag) {
-        throw new RuntimeException("This needs to be implemented on the application level.");
     }
 
     private FragmentManager getFragmentManager(@NonNull LaunchConfig launchConfig) {

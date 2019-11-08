@@ -47,6 +47,7 @@ final class MenuUtil {
     private static final String TAG = MenuUtil.class.getSimpleName();
 
     static void updateMenuItems(@NonNull Menu menu, @NonNull NavigationBar navigationBar, @NonNull OnNavBarItemClickListener navBarButtonClickListener, @Nullable MenuItemDataProvider menuItemDataProvider, @NonNull Context context) {
+        Logger.d(TAG, "Updating nav bar menu items");
         menu.clear();
 
         if (navigationBar.getButtons() == null || navigationBar.getButtons().size() == 0) {
@@ -128,6 +129,7 @@ final class MenuUtil {
         menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
+                Logger.d(TAG, "Nav button clicked: %s", button);
                 navBarButtonClickListener.onNavBarButtonClicked(button, item);
                 return true;
             }
